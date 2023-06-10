@@ -1,35 +1,36 @@
-import { Alert, Button, Result, Space, Typography } from "antd";
+import { Alert, Button, Result, Space, Typography } from 'antd'
 
-import logo from "/logo.svg";
-import { useCallback, useContext, useMemo } from "react";
-import useTracingCreateSpan from "../hooks/useTracingCreateSpan";
-import { TracingContext } from "../contexts/tracing";
+import logo from '/logo.svg'
+import { useCallback, useContext, useMemo } from 'react'
+import useTracingCreateSpan from '../hooks/useTracingCreateSpan'
+import { TracingContext } from '../contexts/tracing'
+import { INFO } from '../constants/wordings'
 
-const { Text } = Typography;
+const { Text } = Typography
 
 interface Props {
-  children: React.ReactNode;
+  children: React.ReactNode
 }
 
 const Content = ({ children }: Props) => {
-  const { rootSpan } = useContext(TracingContext);
+  const { rootSpan } = useContext(TracingContext)
   const span = useMemo(
-    () => useTracingCreateSpan("show-content", rootSpan),
+    () => useTracingCreateSpan('show-content', rootSpan),
     [rootSpan]
-  );
+  )
 
   const handleClick = useCallback(() => {
-    span.addEvent("click on builders program link");
-    span.end();
-    rootSpan?.end();
-  }, [span]);
+    span.addEvent('click on builders program link')
+    span.end()
+    rootSpan?.end()
+  }, [span])
 
   return (
     <Space direction="vertical">
       <Alert
         message={
           <Space direction="vertical" size={0}>
-            <Text>Wanna be part of something cool landing soon?</Text>
+            <Text>{INFO.JOIN_BUILDERS_PROGRAM}</Text>
             <Text>
               <Space>
                 👉
@@ -38,9 +39,9 @@ const Content = ({ children }: Props) => {
                   target="_blank"
                   type="link"
                   onClick={handleClick}
-                  style={{ paddingLeft: "0.2rem", paddingRight: "0.2rem" }}
+                  style={{ paddingLeft: '0.2rem', paddingRight: '0.2rem' }}
                 >
-                  Builders Program
+                  {INFO.BUILDERS_PROGRAM}
                 </Button>
               </Space>
             </Text>
@@ -56,7 +57,7 @@ const Content = ({ children }: Props) => {
         extra={[<div key="form">{children}</div>]}
       />
     </Space>
-  );
-};
+  )
+}
 
-export default Content;
+export default Content
