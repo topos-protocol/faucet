@@ -16,7 +16,7 @@ const FaucetForm = () => {
 
   return (
     <Form
-      name="basic"
+      name="faucet"
       style={{ margin: '0 auto', maxWidth: 600 }}
       initialValues={{ remember: true }}
       onFinish={onFinish}
