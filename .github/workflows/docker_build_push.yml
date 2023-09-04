@@ -1,0 +1,67 @@
+name: Docker_build_push
+
+on:
+  release:
+    types: [created]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  docker:
+    name: Build and push docker image to GitHub Container Registry
+    strategy:
+      matrix:
+        environment: [devnet-1]
+    runs-on: ubuntu-latest-16-core
+    environment: ${{ matrix.environment }}
+    outputs:
+      tags: ${{ steps.meta.outputs.tags }}
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Inject slug/short variables
+      uses: rlespinasse/github-slug-action@v4
+      with:
+        short-length: 7
+
+    - name: Login to GitHub Container Registry
+      uses: docker/login-action@v2
+      with:
+        registry: ${{ env.REGISTRY }}
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Extract metadata (tags, labels) for Docker
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+        tags: |
+          type=semver,pattern={{version}},suffix=${{ format('-{0}', matrix.environment) }}
+          type=semver,pattern={{major}}.{{minor}},suffix=${{ format('-{0}', matrix.environment) }}
+
+    - name: Push to GitHub Container Registry
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.meta.outputs.tags }}
+        labels: ${{ steps.meta.outputs.labels }}
+        build-args: |
+          VITE_SUBNET_REGISTRATOR_CONTRACT_ADDRESS=${{ vars.SUBNET_REGISTRATOR_CONTRACT_ADDRESS }}
+          VITE_TOPOS_CORE_PROXY_CONTRACT_ADDRESS=${{ vars.TOPOS_CORE_PROXY_CONTRACT_ADDRESS }}
+          VITE_TOPOS_SUBNET_ENDPOINT=${{ vars.TOPOS_SUBNET_ENDPOINT }}
+          VITE_TRACING_SERVICE_NAME=${{ vars.TRACING_SERVICE_NAME_FRONTEND }}
+          VITE_TRACING_SERVICE_VERSION=${{ github.ref_name }}
+          VITE_ELASTIC_APM_ENDPOINT=${{ vars.ELASTIC_APM_ENDPOINT }}
+          VITE_RECAPTCHA_SITE_KEY=${{ vars.RECAPTCHA_SITE_KEY }}
+        cache-from: |
+          type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}:build-cache-${{ env.GITHUB_REF_SLUG_URL }}-${{ github.workflow }}
+          type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}:build-cache-main-${{ github.workflow }}
+        cache-to: type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}:build-cache-${{ env.GITHUB_REF_SLUG_URL }}-${{ github.workflow }},mode=max

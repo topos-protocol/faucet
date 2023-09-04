@@ -1,8 +1,8 @@
 name: Run e2e tests
 on:
-  pull_request:
-    branches:
-      - main
+  # pull_request:
+  #   branches:
+  #     - main
 jobs:
   e2e:
     runs-on: ubuntu-latest

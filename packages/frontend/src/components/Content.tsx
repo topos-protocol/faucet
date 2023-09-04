@@ -1,9 +1,6 @@
 import { Alert, Button, Result, Space, Typography } from 'antd'
 
 import logo from '/logo.svg'
-import { useCallback, useContext, useMemo } from 'react'
-import useTracingCreateSpan from '../hooks/useTracingCreateSpan'
-import { TracingContext } from '../contexts/tracing'
 import { INFO } from '../constants/wordings'
 
 const { Text } = Typography
@@ -13,18 +10,6 @@ interface Props {
 }
 
 const Content = ({ children }: Props) => {
-  const { rootSpan } = useContext(TracingContext)
-  const span = useMemo(
-    () => useTracingCreateSpan('show-content', rootSpan),
-    [rootSpan]
-  )
-
-  const handleClick = useCallback(() => {
-    span.addEvent('click on builders program link')
-    span.end()
-    rootSpan?.end()
-  }, [span])
-
   return (
     <Space direction="vertical">
       <Alert
@@ -38,7 +23,6 @@ const Content = ({ children }: Props) => {
                   href="https://builders.toposware.com/topos-builders-program-v1-0"
                   target="_blank"
                   type="link"
-                  onClick={handleClick}
                   style={{ paddingLeft: '0.2rem', paddingRight: '0.2rem' }}
                 >
                   {INFO.BUILDERS_PROGRAM}
@@ -52,7 +36,18 @@ const Content = ({ children }: Props) => {
       />
       <Result
         title="Topos Faucet"
-        subTitle="Request TOPOS to participate in Topos testnet!"
+        subTitle={
+          <>
+            <div>
+              Request 1 subnet native asset of multiple subnets to participate
+              in Topos testnet!
+            </div>
+            <div>
+              The Topos faucet is limited to one request per 24h so be sure to
+              select all the needed subnets!
+            </div>
+          </>
+        }
         icon={<img src={logo} width={200} />}
         extra={[<div key="form">{children}</div>]}
       />
