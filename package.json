@@ -1,53 +1,28 @@
 {
-  "name": "@topos-network/faucet",
-  "private": true,
-  "version": "0.1.0",
+  "name": "@topos-protocol/faucet",
+  "version": "1.0.0",
+  "description": "",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "lint": "eslint src --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
-    "preview": "vite preview",
-    "start": "tsc && vite build --mode development --watch --sourcemap true",
-    "test:e2e": "start-server-and-test 'npm run preview' http-get://localhost:4173 'cypress run'"
+    "backend:build": "npm run build --workspace=backend",
+    "backend:start": "npm run start --workspace=backend",
+    "backend:start:dev": "npm run start:dev --workspace=backend",
+    "backend:start:prod": "npm run start:prod --workspace=backend",
+    "backend:test": "npm run test --workspace=backend",
+    "backend:test:watch": "npm run test:watch --workspace=backend",
+    "frontend:build": "npm run build --workspace=frontend",
+    "frontend:start": "npm run start --workspace=frontend",
+    "frontend:test": "npm run test --workspace=frontend",
+    "frontend:test:coverage": "npm run test:coverage --workspace=frontend",
+    "frontend:test:e2e": "npm run test:e2e --workspace=frontend",
+    "test:e2e": "start-server-and-test 'npm run backend:start' http-get://localhost:3001 'npm run frontend:test:e2e'"
   },
-  "dependencies": {
-    "@ant-design/icons": "^5.0.1",
-    "@emotion/react": "11.10.6",
-    "@emotion/styled": "11.10.6",
-    "@opentelemetry/api": "^1.4.1",
-    "@opentelemetry/context-zone": "^1.11.0",
-    "@opentelemetry/exporter-trace-otlp-proto": "^0.37.0",
-    "@opentelemetry/instrumentation": "^0.37.0",
-    "@opentelemetry/resources": "^1.11.0",
-    "@opentelemetry/sdk-trace-node": "^1.11.0",
-    "@opentelemetry/sdk-trace-web": "^1.11.0",
-    "@opentelemetry/semantic-conventions": "^1.11.0",
-    "antd": "^5.4.0",
-    "ethers": "^5.7.2",
-    "react": "18.2.0",
-    "react-dom": "18.2.0",
-    "reflect-metadata": "^0.1.13",
-    "rxjs": "^7.0.0",
-    "tslib": "^2.3.0",
-    "web-vitals": "^3.3.1"
+  "workspaces": [
+    "packages/*"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/topos-protocol/faucet.git"
   },
-  "devDependencies": {
-    "@testing-library/react": "14.0.0",
-    "@types/jest": "^29.5.1",
-    "@types/react": "^18.0.28",
-    "@types/react-dom": "^18.0.11",
-    "@typescript-eslint/eslint-plugin": "^5.57.1",
-    "@typescript-eslint/parser": "^5.57.1",
-    "@vitejs/plugin-react-swc": "^3.0.0",
-    "@vitest/coverage-c8": "~0.25.8",
-    "@vitest/ui": "^0.25.8",
-    "cypress": "^12.13.0",
-    "env-cmd": "^10.1.0",
-    "eslint": "^8.38.0",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "eslint-plugin-react-refresh": "^0.3.4",
-    "start-server-and-test": "^2.0.0",
-    "typescript": "^5.0.4",
-    "vite": "^4.3.0"
-  }
+  "author": "Sébastien Dan <sebastien.dan@gmail.com>",
+  "license": "MIT"
 }
