@@ -1,10 +1,9 @@
-import { context, Context, trace } from '@opentelemetry/api'
-import { Injectable, Logger } from '@nestjs/common'
+import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { ethers, providers } from 'ethers'
 
 import { GetSubnetAssetsDto } from './faucet.dto'
-import { apm, SERVICE_NAME } from '../main'
+import { apm } from '../main'
 import { sanitizeURLProtocol } from '../utils'
 import { PROVIDER_ERRORS, WALLET_ERRORS } from './faucet.errors'
 import { Transaction } from 'elastic-apm-node'
@@ -29,7 +28,6 @@ export class FaucetService {
         })
       )
     ).finally(() => {
-      console.log('full done')
       apmTransaction.end()
     })
   }
@@ -62,7 +60,6 @@ export class FaucetService {
           const receipt = await tx.wait()
 
           span.end()
-          console.log('end index', apmSpanIndex)
 
           resolve(receipt)
         } catch (error) {

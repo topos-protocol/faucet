@@ -13,7 +13,7 @@ jobs:
     name: Build and push docker image to GitHub Container Registry
     strategy:
       matrix:
-        environment: [devnet-1]
+        environment: [devnet-1, testnet-1]
     runs-on: ubuntu-latest-16-core
     environment: ${{ matrix.environment }}
     outputs:
