@@ -12,8 +12,6 @@ import 'antd/dist/reset.css'
 import useTheme from './hooks/useTheme'
 import FaucetForm from './components/FaucetForm'
 import Content from './components/Content'
-// import { SERVICE_NAME } from './tracing'
-// import { trace } from '@opentelemetry/api'
 import { TracingContext } from './contexts/tracing'
 import { SubnetWithId } from './types'
 import useRegisteredSubnets from './hooks/useRegisteredSubnets'
@@ -79,22 +77,14 @@ const App = () => {
     [registeredSubnets]
   )
 
-  const transaction = useMemo(() => {
-    return apm.startTransaction('root', 'app', { managed: true })
-    // const tracer = trace.getTracer(SERVICE_NAME)
-    // return tracer.startSpan('root')
-  }, [])
-
-  // useEffect(function init() {
-  //   return function onPageClosed() {
-  //     console.log('end root')
-  //     transaction?.end()
-  //   }
-  // }, [])
+  const apmTransaction = useMemo(
+    () => apm.startTransaction('root', 'app', { managed: true }),
+    []
+  )
 
   return (
     <ThemeProvider theme={theme}>
-      <TracingContext.Provider value={{ transaction }}>
+      <TracingContext.Provider value={{ transaction: apmTransaction }}>
         <ErrorsContext.Provider value={{ setErrors }}>
           <SubnetsContext.Provider
             value={{
