@@ -17,10 +17,10 @@ const THROTTLER_TTL_SECONDS = process.env.THROTTLER_TTL_SECONDS
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', '..', 'frontend', 'dist'),
     }),
-    ThrottlerModule.forRoot({
-      ttl: THROTTLER_TTL_SECONDS,
-      limit: 1,
-    }),
+    // ThrottlerModule.forRoot({
+    //   ttl: THROTTLER_TTL_SECONDS,
+    //   limit: 1,
+    // }),
     FaucetModule,
   ],
   providers: [
