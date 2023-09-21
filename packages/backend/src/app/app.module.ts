@@ -23,11 +23,11 @@ const THROTTLER_TTL_SECONDS = process.env.THROTTLER_TTL_SECONDS
     // }),
     FaucetModule,
   ],
-  providers: [
-    {
-      provide: APP_GUARD,
-      useClass: ThrottlerGuard,
-    },
-  ],
+  // providers: [
+  //   {
+  //     provide: APP_GUARD,
+  //     useClass: ThrottlerGuard,
+  //   },
+  // ],
 })
 export class AppModule {}
