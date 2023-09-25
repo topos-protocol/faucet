@@ -19,8 +19,16 @@ import { BigNumber, ethers } from 'ethers'
 import { sanitizeURLProtocol } from './utils'
 import { SubnetsContext } from './contexts/subnets'
 import { toposCoreContract } from './contracts'
+import { SuccessesContext } from './contexts/successes'
 
 const Errors = styled.div`
+  margin: 1rem auto;
+  width: 80%;
+  max-width: 800px;
+  z-index: 99999;
+`
+
+const Successes = styled.div`
   margin: 1rem auto;
   width: 80%;
   max-width: 800px;
@@ -33,9 +41,10 @@ const Layout = styled(AntdLayout)`
 
 const App = () => {
   const theme = useTheme()
+  const [successes, setSuccesses] = useState<string[]>([])
   const [errors, setErrors] = useState<string[]>([])
   const [subnets, setSubnets] = useState<SubnetWithId[]>()
-  const { loading, registeredSubnets } = useRegisteredSubnets()
+  const { registeredSubnets } = useRegisteredSubnets()
 
   useEffect(
     function onRegisteredSubnetsChange() {
@@ -86,27 +95,48 @@ const App = () => {
     <ThemeProvider theme={theme}>
       <TracingContext.Provider value={{ transaction: apmTransaction }}>
         <ErrorsContext.Provider value={{ setErrors }}>
-          <SubnetsContext.Provider
-            value={{
-              loading,
-              data: subnets,
-            }}
-          >
-            <Layout>
-              <Header />
-              {Boolean(errors.length) && (
-                <Errors>
-                  {errors.map((e) => (
-                    <Alert type="error" showIcon closable message={e} key={e} />
-                  ))}
-                </Errors>
-              )}
-              <Content>
-                <FaucetForm />
-              </Content>
-              <Footer />
-            </Layout>
-          </SubnetsContext.Provider>
+          <SuccessesContext.Provider value={{ setSuccesses }}>
+            <SubnetsContext.Provider
+              value={{
+                loading: !Boolean(subnets),
+                data: subnets,
+              }}
+            >
+              <Layout>
+                <Header />
+                {Boolean(errors.length) && (
+                  <Errors>
+                    {errors.map((e) => (
+                      <Alert
+                        type="error"
+                        showIcon
+                        closable
+                        message={e}
+                        key={e}
+                      />
+                    ))}
+                  </Errors>
+                )}
+                {Boolean(successes.length) && (
+                  <Successes>
+                    {successes.map((e) => (
+                      <Alert
+                        type="success"
+                        showIcon
+                        closable
+                        message={e}
+                        key={e}
+                      />
+                    ))}
+                  </Successes>
+                )}
+                <Content>
+                  <FaucetForm />
+                </Content>
+                <Footer />
+              </Layout>
+            </SubnetsContext.Provider>
+          </SuccessesContext.Provider>
         </ErrorsContext.Provider>
       </TracingContext.Provider>
     </ThemeProvider>
