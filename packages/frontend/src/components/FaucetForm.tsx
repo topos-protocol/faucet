@@ -1,5 +1,5 @@
 import { apm } from '@elastic/apm-rum'
-import { Button, Form, Input, message } from 'antd'
+import { Button, Form, Input, Spin } from 'antd'
 import ReCAPTCHA from 'react-google-recaptcha'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
 
@@ -20,7 +20,6 @@ const FaucetForm = () => {
   const { setErrors } = useContext(ErrorsContext)
   const { transaction } = useContext(TracingContext)
   const recaptchaRef = useRef<any>()
-  const [messageApi, contextHolder] = message.useMessage()
 
   const isReCaptchaConfigured = useMemo(
     () => Boolean(import.meta.env.VITE_RECAPTCHA_SITE_KEY),
@@ -65,32 +64,45 @@ const FaucetForm = () => {
         .filter((s) => s)
 
       if (subnetEnpoints.length) {
-        getSubnetAsset(address, subnetEnpoints, traceparent)
-          .then(() => {
-            messageApi.success(
-              'Coins were successfully sent to your address on the selected subnets 🎉'
-            )
-          })
-          .finally(() => {
-            span?.end()
-            transaction?.end()
-          })
+        getSubnetAsset(address, subnetEnpoints, traceparent).finally(() => {
+          span?.end()
+          transaction?.end()
+        })
       }
     },
     [registeredSubnets, transaction, span, recaptchaRef]
   )
 
-  useEffect(() => {
-    if (registeredSubnets) {
-      const innerSpan = transaction?.startSpan('get-registered-subnets', 'app')
-      innerSpan?.addLabels({
-        registeredSubnets: JSON.stringify(registeredSubnets),
-      })
-      setTimeout(() => {
-        innerSpan?.end()
-      }, 1000)
-    }
-  }, [registeredSubnets])
+  useEffect(
+    function initFormField() {
+      if (registeredSubnets) {
+        console.log(registeredSubnets)
+        form.setFieldValue(
+          'subnetIds',
+          registeredSubnets.map((s) => s.id)
+        )
+      }
+    },
+    [form, registeredSubnets]
+  )
+
+  useEffect(
+    function createInnerTracingSpan() {
+      if (registeredSubnets) {
+        const innerSpan = transaction?.startSpan(
+          'get-registered-subnets',
+          'app'
+        )
+        innerSpan?.addLabels({
+          registeredSubnets: JSON.stringify(registeredSubnets),
+        })
+        setTimeout(() => {
+          innerSpan?.end()
+        }, 1000)
+      }
+    },
+    [registeredSubnets]
+  )
 
   const onFinishFailed = useCallback(
     (errorInfo: any) => {
@@ -103,61 +115,66 @@ const FaucetForm = () => {
   )
 
   return (
-    <Form
-      form={form}
-      name="faucet"
-      layout="vertical"
-      style={{ margin: '0 auto', maxWidth: 400 }}
-      onFinish={onFinish}
-      onFinishFailed={onFinishFailed}
-    >
-      {contextHolder}
-      <Form.Item
-        label="Subnets"
-        name="subnetIds"
-        rules={[
-          {
-            required: true,
-            message: ERROR.MISSING_SUBNET,
-          },
-        ]}
-      >
-        <SubnetSelect
-          loading={getRegisteredSubnetsLoading}
-          size="large"
-          subnets={registeredSubnets}
-          disabled={loading || !isReCaptchaConfigured}
-        />
-      </Form.Item>
-      <Form.Item
-        label="Address"
-        name="address"
-        rules={[{ required: true, message: 'Please input your address!' }]}
-      >
-        <Input
-          placeholder="Input your address"
-          disabled={loading || !isReCaptchaConfigured}
-        />
-      </Form.Item>
-      <br />
-      {isReCaptchaConfigured && (
-        <ReCAPTCHA
-          ref={recaptchaRef}
-          sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
-          size="invisible"
-        />
-      )}
-      <Form.Item>
-        <Button
-          type="primary"
-          htmlType="submit"
-          loading={loading}
-          disabled={!isReCaptchaConfigured}
+    <>
+      {getRegisteredSubnetsLoading ? (
+        <Spin size="large" />
+      ) : (
+        <Form
+          form={form}
+          name="faucet"
+          layout="vertical"
+          style={{ margin: '0 auto', maxWidth: 400 }}
+          onFinish={onFinish}
+          onFinishFailed={onFinishFailed}
         >
-          Submit
-        </Button>
-      </Form.Item>
-    </Form>
+          <Form.Item
+            label="Subnets"
+            name="subnetIds"
+            rules={[
+              {
+                required: true,
+                message: ERROR.MISSING_SUBNET,
+              },
+            ]}
+          >
+            <SubnetSelect
+              loading={getRegisteredSubnetsLoading}
+              size="large"
+              subnets={registeredSubnets}
+              disabled={loading || !registeredSubnets || !isReCaptchaConfigured}
+            />
+          </Form.Item>
+          <Form.Item
+            label="Address"
+            name="address"
+            rules={[{ required: true, message: 'Please input your address!' }]}
+          >
+            <Input
+              placeholder="Input your address"
+              disabled={loading || !isReCaptchaConfigured}
+            />
+          </Form.Item>
+          <br />
+          {isReCaptchaConfigured && (
+            <ReCAPTCHA
+              ref={recaptchaRef}
+              sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
+              size="invisible"
+            />
+          )}
+          <Form.Item>
+            <Button
+              type="primary"
+              htmlType="submit"
+              loading={loading}
+              disabled={!isReCaptchaConfigured}
+            >
+              Submit
+            </Button>
+          </Form.Item>
+        </Form>
+      )}
+    </>
   )
 }
 

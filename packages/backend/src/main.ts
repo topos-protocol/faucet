@@ -4,6 +4,7 @@ import { NestFactory } from '@nestjs/core'
 import * as ElasticAPM from 'elastic-apm-node'
 
 import { AppModule } from './app/app.module'
+import { NestExpressApplication } from '@nestjs/platform-express'
 
 export const SERVICE_NAME = process.env.TRACING_SERVICE_NAME || 'faucet-server'
 export const SERVICE_VERSION = process.env.TRACING_SERVICE_VERSION || 'unknown'
@@ -20,7 +21,11 @@ export const apm = ElasticAPM.start({
 })
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule)
+  const app = await NestFactory.create<NestExpressApplication>(AppModule)
+
+  // See https://docs.nestjs.com/security/rate-limiting#proxies
+  app.set('trust proxy', true)
+
   app.useGlobalPipes(new ValidationPipe())
 
   const globalPrefix = 'api'
