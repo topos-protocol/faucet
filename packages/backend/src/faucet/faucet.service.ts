@@ -3,51 +3,65 @@ import { ConfigService } from '@nestjs/config'
 import { ethers, providers } from 'ethers'
 
 import { GetSubnetAssetsDto } from './faucet.dto'
-import { apm } from '../main'
 import { sanitizeURLProtocol } from '../utils'
 import { PROVIDER_ERRORS, WALLET_ERRORS } from './faucet.errors'
-import { Transaction } from 'elastic-apm-node'
+import { ApmService } from 'src/apm/apm.service'
 
 @Injectable()
 export class FaucetService {
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private apmService: ApmService
+  ) {}
 
   async getSubnetAssets(
     { address, subnetEndpoints }: GetSubnetAssetsDto,
     traceparent?: string
   ) {
-    const apmTransaction = apm.startTransaction('root-server', {
-      childOf: traceparent,
+    const apmTransaction = this.apmService.startTransaction(
+      'faucetService.getSubnetAssets',
+      traceparent
+    )
+
+    apmTransaction.addLabels({
+      address,
+      subnetEndpoints: JSON.stringify(subnetEndpoints),
     })
 
-    return Promise.all(
-      subnetEndpoints.map((endpoint, index) =>
-        this._sendTransaction(address, endpoint, {
-          apmSpanIndex: index,
-          apmTransaction,
+    const promises = []
+
+    for (const endpoint of subnetEndpoints) {
+      promises.push(
+        new Promise(async (resolve, reject) => {
+          try {
+            const { logsBloom, ...receipt } = await this._sendTransaction(
+              address,
+              endpoint
+            )
+            apmTransaction.addLabels({
+              [`receipt-${endpoint.replace('.', '-')}`]:
+                JSON.stringify(receipt),
+            })
+            resolve(receipt)
+          } catch (error) {
+            this.apmService.captureError(error)
+            reject(error)
+          }
         })
       )
-    ).finally(() => {
-      apmTransaction.end()
-    })
+    }
+
+    const receipts = await Promise.all(promises)
+
+    apmTransaction.end()
+
+    return receipts
   }
 
-  private async _sendTransaction(
-    address: string,
-    subnetEndpoint: string,
-    {
-      apmSpanIndex,
-      apmTransaction,
-    }: { apmSpanIndex: number; apmTransaction: Transaction }
-  ) {
+  private async _sendTransaction(address: string, subnetEndpoint: string) {
     return new Promise<providers.TransactionReceipt>(
       async (resolve, reject) => {
         try {
-          const span = apmTransaction.startSpan(
-            `get-subnet-asset-${apmSpanIndex}`
-          )
-          span.addLabels({ address, subnetEndpoint })
-
           const provider = await this._createProvider(subnetEndpoint)
 
           const wallet = this._createWallet(provider)
@@ -58,9 +72,6 @@ export class FaucetService {
           })
 
           const receipt = await tx.wait()
-
-          span.end()
-
           resolve(receipt)
         } catch (error) {
           reject(error)
@@ -83,6 +94,7 @@ export class FaucetService {
       provider.on('debug', (data) => {
         if (data.error) {
           clearTimeout(timeoutId)
+          this.apmService.captureError(data.error)
           reject(new Error(PROVIDER_ERRORS.INVALID_ENDPOINT))
         }
       })
@@ -96,6 +108,7 @@ export class FaucetService {
         provider
       )
     } catch (error) {
+      this.apmService.captureError(error)
       throw new Error(WALLET_ERRORS.INVALID_PRIVATE_KEY)
     }
   }

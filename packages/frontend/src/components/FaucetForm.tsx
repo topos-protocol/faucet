@@ -7,7 +7,6 @@ import { ERROR } from '../constants/wordings'
 import { SubnetsContext } from '../contexts/subnets'
 import useGetSubnetAsset from '../hooks/useGetSubnetAsset'
 import SubnetSelect from './SubnetSelect'
-import { TracingContext } from '../contexts/tracing'
 import { ErrorsContext } from '../contexts/errors'
 
 interface Values {
@@ -18,7 +17,6 @@ interface Values {
 const FaucetForm = () => {
   const { loading, getSubnetAsset } = useGetSubnetAsset()
   const { setErrors } = useContext(ErrorsContext)
-  const { transaction } = useContext(TracingContext)
   const recaptchaRef = useRef<any>()
 
   const isReCaptchaConfigured = useMemo(
@@ -38,16 +36,6 @@ const FaucetForm = () => {
     [isReCaptchaConfigured]
   )
 
-  const span = useMemo(
-    () => transaction?.startSpan('faucet-form-init', 'app', { blocking: true }),
-    [transaction]
-  )
-
-  const traceparent = useMemo(
-    () => `00-${(span as any).traceId}-${(span as any).id}-01`,
-    [transaction, span]
-  )
-
   const [form] = Form.useForm()
 
   const { data: registeredSubnets, loading: getRegisteredSubnetsLoading } =
@@ -56,6 +44,16 @@ const FaucetForm = () => {
   const onFinish = useCallback(
     ({ address, subnetIds }: Values) => {
       recaptchaRef?.current?.execute()
+
+      const transaction = apm.startTransaction('app', 'app', { managed: true })
+      const span = transaction?.startSpan('faucet-form', 'app', {
+        blocking: true,
+      })
+      span?.addLabels({
+        registeredSubnets: JSON.stringify(registeredSubnets),
+      })
+      const traceparent = `00-${(span as any).traceId}-${(span as any).id}-01`
+
       const subnetEnpoints = subnetIds
         .map((id) => {
           const subnet = registeredSubnets?.find((s) => s.id === id)!
@@ -64,19 +62,22 @@ const FaucetForm = () => {
         .filter((s) => s)
 
       if (subnetEnpoints.length) {
-        getSubnetAsset(address, subnetEnpoints, traceparent).finally(() => {
-          span?.end()
-          transaction?.end()
-        })
+        getSubnetAsset(address, subnetEnpoints, traceparent)
+          .catch((error) => {
+            apm.captureError(error)
+          })
+          .finally(() => {
+            span?.end()
+            transaction?.end()
+          })
       }
     },
-    [registeredSubnets, transaction, span, recaptchaRef]
+    [registeredSubnets, recaptchaRef]
   )
 
   useEffect(
     function initFormField() {
       if (registeredSubnets) {
-        console.log(registeredSubnets)
         form.setFieldValue(
           'subnetIds',
           registeredSubnets.map((s) => s.id)
@@ -86,33 +87,10 @@ const FaucetForm = () => {
     [form, registeredSubnets]
   )
 
-  useEffect(
-    function createInnerTracingSpan() {
-      if (registeredSubnets) {
-        const innerSpan = transaction?.startSpan(
-          'get-registered-subnets',
-          'app'
-        )
-        innerSpan?.addLabels({
-          registeredSubnets: JSON.stringify(registeredSubnets),
-        })
-        setTimeout(() => {
-          innerSpan?.end()
-        }, 1000)
-      }
-    },
-    [registeredSubnets]
-  )
-
-  const onFinishFailed = useCallback(
-    (errorInfo: any) => {
-      console.error('Failed:', errorInfo)
-      apm.captureError(errorInfo)
-      span?.end()
-      transaction?.end()
-    },
-    [transaction, span]
-  )
+  const onFinishFailed = useCallback((errorInfo: any) => {
+    console.error('Failed:', errorInfo)
+    apm.captureError(errorInfo)
+  }, [])
 
   return (
     <>

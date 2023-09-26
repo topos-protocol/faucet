@@ -1,4 +1,3 @@
-import { apm } from '@elastic/apm-rum'
 import axios from 'axios'
 import { useCallback, useContext, useState } from 'react'
 
@@ -37,8 +36,6 @@ export default function useGetSubnetAsset() {
             resolve()
           })
           .catch((error) => {
-            apm.captureError(error)
-
             let _error: string
             switch (error?.response?.status) {
               case 429: // Too many requests
