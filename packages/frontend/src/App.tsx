@@ -1,8 +1,7 @@
-import { apm } from '@elastic/apm-rum'
 import { ThemeProvider } from '@emotion/react'
 import styled from '@emotion/styled'
 import { Alert, Layout as AntdLayout } from 'antd'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { ErrorsContext } from './contexts/errors'
 import Footer from './components/Footer'
@@ -12,7 +11,6 @@ import 'antd/dist/reset.css'
 import useTheme from './hooks/useTheme'
 import FaucetForm from './components/FaucetForm'
 import Content from './components/Content'
-import { TracingContext } from './contexts/tracing'
 import { SubnetWithId } from './types'
 import useRegisteredSubnets from './hooks/useRegisteredSubnets'
 import { BigNumber, ethers } from 'ethers'
@@ -86,59 +84,46 @@ const App = () => {
     [registeredSubnets]
   )
 
-  const apmTransaction = useMemo(
-    () => apm.startTransaction('root', 'app', { managed: true }),
-    []
-  )
-
   return (
     <ThemeProvider theme={theme}>
-      <TracingContext.Provider value={{ transaction: apmTransaction }}>
-        <ErrorsContext.Provider value={{ setErrors }}>
-          <SuccessesContext.Provider value={{ setSuccesses }}>
-            <SubnetsContext.Provider
-              value={{
-                loading: !Boolean(subnets),
-                data: subnets,
-              }}
-            >
-              <Layout>
-                <Header />
-                {Boolean(errors.length) && (
-                  <Errors>
-                    {errors.map((e) => (
-                      <Alert
-                        type="error"
-                        showIcon
-                        closable
-                        message={e}
-                        key={e}
-                      />
-                    ))}
-                  </Errors>
-                )}
-                {Boolean(successes.length) && (
-                  <Successes>
-                    {successes.map((e) => (
-                      <Alert
-                        type="success"
-                        showIcon
-                        closable
-                        message={e}
-                        key={e}
-                      />
-                    ))}
-                  </Successes>
-                )}
-                <Content>
-                  <FaucetForm />
-                </Content>
-                <Footer />
-              </Layout>
-            </SubnetsContext.Provider>
-          </SuccessesContext.Provider>
-        </ErrorsContext.Provider>
-      </TracingContext.Provider>
+      <ErrorsContext.Provider value={{ setErrors }}>
+        <SuccessesContext.Provider value={{ setSuccesses }}>
+          <SubnetsContext.Provider
+            value={{
+              loading: !Boolean(subnets),
+              data: subnets,
+            }}
+          >
+            <Layout>
+              <Header />
+              {Boolean(errors.length) && (
+                <Errors>
+                  {errors.map((e) => (
+                    <Alert type="error" showIcon closable message={e} key={e} />
+                  ))}
+                </Errors>
+              )}
+              {Boolean(successes.length) && (
+                <Successes>
+                  {successes.map((e) => (
+                    <Alert
+                      type="success"
+                      showIcon
+                      closable
+                      message={e}
+                      key={e}
+                    />
+                  ))}
+                </Successes>
+              )}
+              <Content>
+                <FaucetForm />
+              </Content>
+              <Footer />
+            </Layout>
+          </SubnetsContext.Provider>
+        </SuccessesContext.Provider>
+      </ErrorsContext.Provider>
     </ThemeProvider>
   )
 }
