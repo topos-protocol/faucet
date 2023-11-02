@@ -3,7 +3,6 @@ import React, { useMemo } from 'react'
 
 import { subnetRegistratorContract } from '../contracts'
 import { Subnet, SubnetWithId } from '../types'
-import { sanitizeURLProtocol } from '../utils'
 import { ErrorsContext } from '../contexts/errors'
 
 export default function useRegisteredSubnets() {
@@ -15,10 +14,7 @@ export default function useRegisteredSubnets() {
   const provider = useMemo(
     () =>
       new ethers.providers.WebSocketProvider(
-        sanitizeURLProtocol(
-          'ws',
-          `${import.meta.env.VITE_TOPOS_SUBNET_ENDPOINT}/ws`
-        )
+        import.meta.env.VITE_TOPOS_SUBNET_ENDPOINT_WS
       ),
     []
   )
