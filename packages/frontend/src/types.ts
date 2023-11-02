@@ -18,3 +18,8 @@ export interface FetchData<T> {
   error?: Error
   loading?: boolean
 }
+
+export interface TracingOptions {
+  traceparent: ''
+  tracestate: ''
+}

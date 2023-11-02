@@ -1,9 +1,9 @@
-import React from 'react'
+import { createContext, Dispatch, SetStateAction } from 'react'
 
 interface ErrorsContext {
-  setErrors: React.Dispatch<React.SetStateAction<string[]>>
+  setErrors: Dispatch<SetStateAction<string[]>>
 }
 
-export const ErrorsContext = React.createContext<ErrorsContext>({
+export const ErrorsContext = createContext<ErrorsContext>({
   setErrors: () => {},
 })

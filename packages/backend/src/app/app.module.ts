@@ -5,10 +5,12 @@ import { ServeStaticModule } from '@nestjs/serve-static'
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler'
 import { join } from 'path'
 
+import { TelemetryModule } from '../telemetry/telemetry.module'
 import { FaucetModule } from '../faucet/faucet.module'
 
 @Module({
   imports: [
+    TelemetryModule,
     ConfigModule.forRoot({ isGlobal: true }),
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', '..', '..', 'frontend', 'dist'),

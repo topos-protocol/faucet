@@ -3,6 +3,7 @@ import { useCallback, useContext, useState } from 'react'
 
 import { ErrorsContext } from '../contexts/errors'
 import { SuccessesContext } from '../contexts/successes'
+import { TracingOptions } from '../types'
 
 export default function useGetSubnetAsset() {
   const { setErrors } = useContext(ErrorsContext)
@@ -10,7 +11,11 @@ export default function useGetSubnetAsset() {
   const [loading, setLoading] = useState(false)
 
   const getSubnetAsset = useCallback(
-    (address: string, subnetEndpoints: string[], traceparent: string) => {
+    (
+      address: string,
+      subnetEndpoints: string[],
+      { traceparent, tracestate }: TracingOptions
+    ) => {
       setLoading(true)
 
       return new Promise<void>((resolve, reject) => {
@@ -24,6 +29,7 @@ export default function useGetSubnetAsset() {
             {
               headers: {
                 traceparent,
+                tracestate,
               },
             }
           )

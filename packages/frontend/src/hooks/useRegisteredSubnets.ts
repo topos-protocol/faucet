@@ -1,15 +1,14 @@
 import { ethers } from 'ethers'
-import React, { useMemo } from 'react'
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
 
 import { subnetRegistratorContract } from '../contracts'
 import { Subnet, SubnetWithId } from '../types'
 import { ErrorsContext } from '../contexts/errors'
 
 export default function useRegisteredSubnets() {
-  const { setErrors } = React.useContext(ErrorsContext)
-  const [loading, setLoading] = React.useState(false)
-  const [registeredSubnets, setRegisteredSubnets] =
-    React.useState<SubnetWithId[]>()
+  const { setErrors } = useContext(ErrorsContext)
+  const [loading, setLoading] = useState(false)
+  const [registeredSubnets, setRegisteredSubnets] = useState<SubnetWithId[]>()
 
   const provider = useMemo(
     () =>
@@ -21,7 +20,7 @@ export default function useRegisteredSubnets() {
 
   const contract = subnetRegistratorContract.connect(provider)
 
-  const getRegisteredSubnets = React.useCallback(async () => {
+  const getRegisteredSubnets = useCallback(async () => {
     setLoading(true)
 
     const registeredSubnetsCount = await contract
@@ -81,7 +80,7 @@ export default function useRegisteredSubnets() {
     setLoading(false)
   }, [])
 
-  React.useEffect(function init() {
+  useEffect(function init() {
     getRegisteredSubnets()
   }, [])
 
