@@ -57,7 +57,7 @@ const FaucetForm = () => {
       const subnetEnpoints = subnetIds
         .map((id) => {
           const subnet = registeredSubnets?.find((s) => s.id === id)!
-          return subnet?.endpoint
+          return subnet.endpointWs || subnet.endpointHttp
         })
         .filter((s) => s)
 

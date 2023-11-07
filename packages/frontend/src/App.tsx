@@ -14,7 +14,6 @@ import Content from './components/Content'
 import { SubnetWithId } from './types'
 import useRegisteredSubnets from './hooks/useRegisteredSubnets'
 import { BigNumber, ethers } from 'ethers'
-import { sanitizeURLProtocol } from './utils'
 import { SubnetsContext } from './contexts/subnets'
 import { toposCoreContract } from './contracts'
 import { SuccessesContext } from './contexts/successes'
@@ -48,12 +47,15 @@ const App = () => {
     function onRegisteredSubnetsChange() {
       async function _() {
         if (registeredSubnets) {
-          const toposSubnetEndpoint = import.meta.env.VITE_TOPOS_SUBNET_ENDPOINT
+          const toposSubnetEndpointHttp = import.meta.env
+            .VITE_TOPOS_SUBNET_ENDPOINT_HTTP
+          const toposSubnetEndpointWs = import.meta.env
+            .VITE_TOPOS_SUBNET_ENDPOINT_WS
           let toposSubnet: SubnetWithId | undefined
 
-          if (toposSubnetEndpoint) {
+          if (toposSubnetEndpointHttp && toposSubnetEndpointWs) {
             const provider = new ethers.providers.JsonRpcProvider(
-              sanitizeURLProtocol('http', toposSubnetEndpoint)
+              toposSubnetEndpointHttp
             )
             const network = await provider.getNetwork()
             const chainId = network.chainId
@@ -63,7 +65,8 @@ const App = () => {
 
             toposSubnet = {
               chainId: BigNumber.from(chainId.toString()),
-              endpoint: toposSubnetEndpoint,
+              endpointHttp: toposSubnetEndpointHttp,
+              endpointWs: toposSubnetEndpointWs,
               currencySymbol: 'TOPOS',
               id: subnetId,
               logoURL: '/logo.svg',

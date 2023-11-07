@@ -1,9 +1,8 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { ethers, providers } from 'ethers'
+import { providers, utils, Wallet } from 'ethers'
 
 import { GetSubnetAssetsDto } from './faucet.dto'
-import { sanitizeURLProtocol } from '../utils'
 import { PROVIDER_ERRORS, WALLET_ERRORS } from './faucet.errors'
 import { ApmService } from 'src/apm/apm.service'
 
@@ -68,7 +67,7 @@ export class FaucetService {
 
           const tx = await wallet.sendTransaction({
             to: address,
-            value: ethers.utils.parseUnits('1.0'),
+            value: utils.parseUnits('1.0'),
           })
 
           const receipt = await tx.wait()
@@ -81,32 +80,34 @@ export class FaucetService {
   }
 
   private _createProvider(endpoint: string) {
-    return new Promise<providers.WebSocketProvider>((resolve, reject) => {
-      const provider = new ethers.providers.WebSocketProvider(
-        sanitizeURLProtocol('ws', `${endpoint}/ws`)
-      )
+    return new Promise<providers.WebSocketProvider | providers.JsonRpcProvider>(
+      (resolve, reject) => {
+        const url = new URL(endpoint)
+        const provider = url.protocol.startsWith('ws')
+          ? new providers.WebSocketProvider(endpoint)
+          : new providers.JsonRpcProvider(endpoint)
 
-      // Fix: Timeout to leave time to errors to be asynchronously caught
-      const timeoutId = setTimeout(() => {
-        resolve(provider)
-      }, 1000)
+        // Fix: Timeout to leave time to errors to be asynchronously caught
+        const timeoutId = setTimeout(() => {
+          resolve(provider)
+        }, 1000)
 
-      provider.on('debug', (data) => {
-        if (data.error) {
-          clearTimeout(timeoutId)
-          this.apmService.captureError(data.error)
-          reject(new Error(PROVIDER_ERRORS.INVALID_ENDPOINT))
-        }
-      })
-    })
+        provider.on('debug', (data) => {
+          if (data.error) {
+            clearTimeout(timeoutId)
+            this.apmService.captureError(data.error)
+            reject(new Error(PROVIDER_ERRORS.INVALID_ENDPOINT))
+          }
+        })
+      }
+    )
   }
 
-  private _createWallet(provider: providers.WebSocketProvider) {
+  private _createWallet(
+    provider: providers.WebSocketProvider | providers.JsonRpcProvider
+  ) {
     try {
-      return new ethers.Wallet(
-        this.configService.get<string>('PRIVATE_KEY'),
-        provider
-      )
+      return new Wallet(this.configService.get<string>('PRIVATE_KEY'), provider)
     } catch (error) {
       this.apmService.captureError(error)
       throw new Error(WALLET_ERRORS.INVALID_PRIVATE_KEY)
