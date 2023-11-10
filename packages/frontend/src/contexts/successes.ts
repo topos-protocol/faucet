@@ -1,7 +1,7 @@
-import React, { createContext } from 'react'
+import { createContext, Dispatch, SetStateAction } from 'react'
 
 interface SuccessesContext {
-  setSuccesses: React.Dispatch<React.SetStateAction<string[]>>
+  setSuccesses: Dispatch<SetStateAction<string[]>>
 }
 
 export const SuccessesContext = createContext<SuccessesContext>({

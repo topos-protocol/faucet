@@ -54,14 +54,14 @@ jobs:
         tags: ${{ steps.meta.outputs.tags }}
         labels: ${{ steps.meta.outputs.labels }}
         build-args: |
+          VITE_RECAPTCHA_SITE_KEY=${{ vars.RECAPTCHA_SITE_KEY }}
           VITE_SUBNET_REGISTRATOR_CONTRACT_ADDRESS=${{ vars.SUBNET_REGISTRATOR_CONTRACT_ADDRESS }}
           VITE_TOPOS_CORE_PROXY_CONTRACT_ADDRESS=${{ vars.TOPOS_CORE_PROXY_CONTRACT_ADDRESS }}
           VITE_TOPOS_SUBNET_ENDPOINT_WS=${{ vars.TOPOS_SUBNET_ENDPOINT_WS }}
           VITE_TOPOS_SUBNET_ENDPOINT_HTTP=${{ vars.TOPOS_SUBNET_ENDPOINT_HTTP }}
-          VITE_TRACING_SERVICE_NAME=${{ vars.TRACING_SERVICE_NAME_FRONTEND }}
-          VITE_TRACING_SERVICE_VERSION=${{ github.ref_name }}
-          VITE_ELASTIC_APM_ENDPOINT=${{ vars.ELASTIC_APM_ENDPOINT }}
-          VITE_RECAPTCHA_SITE_KEY=${{ vars.RECAPTCHA_SITE_KEY }}
+          VITE_OTEL_SERVICE_NAME=${{ vars.OTEL_SERVICE_NAME }}
+          VITE_OTEL_SERVICE_VERSION=${{ vars.OTEL_SERVICE_VERSION }}
+          VITE_OTEL_EXPORTER_OTLP_ENDPOINT=${{ vars.OTEL_EXPORTER_OTLP_ENDPOINT }}
         cache-from: |
           type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}:build-cache-${{ env.GITHUB_REF_SLUG_URL }}-${{ github.workflow }}
           type=registry,ref=${{ env.REGISTRY }}/${{ github.repository }}:build-cache-main-${{ github.workflow }}

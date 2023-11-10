@@ -1,60 +1,67 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
-import { providers, utils, Wallet } from 'ethers'
+import { SpanStatusCode, trace } from '@opentelemetry/api'
+import { ethers, providers, utils } from 'ethers'
 
 import { GetSubnetAssetsDto } from './faucet.dto'
 import { PROVIDER_ERRORS, WALLET_ERRORS } from './faucet.errors'
-import { ApmService } from 'src/apm/apm.service'
+import { getErrorMessage } from 'src/utils'
 
 @Injectable()
 export class FaucetService {
-  constructor(
-    private configService: ConfigService,
-    private apmService: ApmService
-  ) {}
+  private _tracer = trace.getTracer('FaucetService')
+  constructor(private configService: ConfigService) {}
 
-  async getSubnetAssets(
-    { address, subnetEndpoints }: GetSubnetAssetsDto,
-    traceparent?: string
-  ) {
-    const apmTransaction = this.apmService.startTransaction(
-      'faucetService.getSubnetAssets',
-      traceparent
-    )
+  async getSubnetAssets({ address, subnetEndpoints }: GetSubnetAssetsDto) {
+    return this._tracer.startActiveSpan('getSubnetAssets', async (span) => {
+      span.setAttributes({
+        address,
+        subnetEndpoints,
+      })
+      const promises: Array<
+        Promise<Partial<ethers.providers.TransactionReceipt>>
+      > = []
 
-    apmTransaction.addLabels({
-      address,
-      subnetEndpoints: JSON.stringify(subnetEndpoints),
-    })
+      for (const endpoint of subnetEndpoints) {
+        promises.push(
+          new Promise<Partial<ethers.providers.TransactionReceipt>>(
+            async (resolve, reject) => {
+              try {
+                const { logsBloom, ...receipt } = await this._sendTransaction(
+                  address,
+                  endpoint
+                )
+                span.setAttribute(
+                  `receipt-${endpoint.replace('.', '-')}`,
+                  JSON.stringify(receipt)
+                )
+                resolve(receipt)
+              } catch (error) {
+                const message = getErrorMessage(error)
+                span.setAttribute(
+                  `error-${endpoint.replace('.', '-')}`,
+                  message
+                )
+                reject(error)
+              }
+            }
+          )
+        )
+      }
 
-    const promises = []
-
-    for (const endpoint of subnetEndpoints) {
-      promises.push(
-        new Promise(async (resolve, reject) => {
-          try {
-            const { logsBloom, ...receipt } = await this._sendTransaction(
-              address,
-              endpoint
-            )
-            apmTransaction.addLabels({
-              [`receipt-${endpoint.replace('.', '-')}`]:
-                JSON.stringify(receipt),
-            })
-            resolve(receipt)
-          } catch (error) {
-            this.apmService.captureError(error)
-            reject(error)
-          }
+      return Promise.all(promises)
+        .then((receipts) => {
+          span.setStatus({ code: SpanStatusCode.OK })
+          return receipts
         })
-      )
-    }
-
-    const receipts = await Promise.all(promises)
-
-    apmTransaction.end()
-
-    return receipts
+        .catch((error) => {
+          const message = getErrorMessage(error)
+          span.setStatus({ code: SpanStatusCode.ERROR, message })
+        })
+        .finally(() => {
+          span.end()
+        })
+    })
   }
 
   private async _sendTransaction(address: string, subnetEndpoint: string) {
@@ -95,7 +102,6 @@ export class FaucetService {
         provider.on('debug', (data) => {
           if (data.error) {
             clearTimeout(timeoutId)
-            this.apmService.captureError(data.error)
             reject(new Error(PROVIDER_ERRORS.INVALID_ENDPOINT))
           }
         })
@@ -107,9 +113,11 @@ export class FaucetService {
     provider: providers.WebSocketProvider | providers.JsonRpcProvider
   ) {
     try {
-      return new Wallet(this.configService.get<string>('PRIVATE_KEY'), provider)
+      return new ethers.Wallet(
+        this.configService.get('PRIVATE_KEY') || '',
+        provider
+      )
     } catch (error) {
-      this.apmService.captureError(error)
       throw new Error(WALLET_ERRORS.INVALID_PRIVATE_KEY)
     }
   }

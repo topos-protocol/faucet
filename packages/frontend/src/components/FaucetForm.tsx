@@ -1,4 +1,4 @@
-import { apm } from '@elastic/apm-rum'
+import { context, propagation, SpanStatusCode, trace } from '@opentelemetry/api'
 import { Button, Form, Input, Spin } from 'antd'
 import ReCAPTCHA from 'react-google-recaptcha'
 import { useCallback, useContext, useEffect, useMemo, useRef } from 'react'
@@ -8,6 +8,9 @@ import { SubnetsContext } from '../contexts/subnets'
 import useGetSubnetAsset from '../hooks/useGetSubnetAsset'
 import SubnetSelect from './SubnetSelect'
 import { ErrorsContext } from '../contexts/errors'
+import useTracingCreateSpan from '../hooks/useTracingCreateSpan'
+import { TracingOptions } from '../types'
+import { getErrorMessage } from '../utils'
 
 interface Values {
   address: string
@@ -45,32 +48,38 @@ const FaucetForm = () => {
     ({ address, subnetIds }: Values) => {
       recaptchaRef?.current?.execute()
 
-      const transaction = apm.startTransaction('app', 'app', { managed: true })
-      const span = transaction?.startSpan('faucet-form', 'app', {
-        blocking: true,
-      })
-      span?.addLabels({
-        registeredSubnets: JSON.stringify(registeredSubnets),
-      })
-      const traceparent = `00-${(span as any).traceId}-${(span as any).id}-01`
+      const span = useTracingCreateSpan('FaucetForm', 'onFinish')
+      span.setAttribute('registeredSubnets', JSON.stringify(registeredSubnets))
 
-      const subnetEnpoints = subnetIds
-        .map((id) => {
-          const subnet = registeredSubnets?.find((s) => s.id === id)!
-          return subnet.endpointWs || subnet.endpointHttp
-        })
-        .filter((s) => s)
+      context.with(trace.setSpan(context.active(), span), async () => {
+        const tracingOptions: TracingOptions = {
+          traceparent: '',
+          tracestate: '',
+        }
 
-      if (subnetEnpoints.length) {
-        getSubnetAsset(address, subnetEnpoints, traceparent)
-          .catch((error) => {
-            apm.captureError(error)
+        propagation.inject(context.active(), tracingOptions)
+
+        const subnetEnpoints = subnetIds
+          .map((id) => {
+            const subnet = registeredSubnets?.find((s) => s.id === id)!
+            return subnet.endpointWs || subnet.endpointHttp
           })
-          .finally(() => {
-            span?.end()
-            transaction?.end()
-          })
-      }
+          .filter((s) => s)
+
+        if (subnetEnpoints.length) {
+          getSubnetAsset(address, subnetEnpoints, tracingOptions)
+            .then(() => {
+              span.setStatus({ code: SpanStatusCode.OK })
+            })
+            .catch((error) => {
+              const message = getErrorMessage(error)
+              span.setStatus({ code: SpanStatusCode.ERROR, message })
+            })
+            .finally(() => {
+              span.end()
+            })
+        }
+      })
     },
     [registeredSubnets, recaptchaRef]
   )
@@ -89,7 +98,6 @@ const FaucetForm = () => {
 
   const onFinishFailed = useCallback((errorInfo: any) => {
     console.error('Failed:', errorInfo)
-    apm.captureError(errorInfo)
   }, [])
 
   return (
