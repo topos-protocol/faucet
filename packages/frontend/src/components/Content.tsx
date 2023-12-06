@@ -1,9 +1,6 @@
-import { Alert, Button, Result, Space, Typography } from 'antd'
+import { Result, Space } from 'antd'
 
 import logo from '/logo.svg'
-import { INFO } from '../constants/wordings'
-
-const { Text } = Typography
 
 interface Props {
   children: React.ReactNode
@@ -12,28 +9,6 @@ interface Props {
 const Content = ({ children }: Props) => {
   return (
     <Space direction="vertical">
-      <Alert
-        message={
-          <Space direction="vertical" size={0}>
-            <Text>{INFO.JOIN_BUILDERS_PROGRAM}</Text>
-            <Text>
-              <Space>
-                👉
-                <Button
-                  href="https://builders.toposware.com/topos-builders-program-v1-0"
-                  target="_blank"
-                  type="link"
-                  style={{ paddingLeft: '0.2rem', paddingRight: '0.2rem' }}
-                >
-                  {INFO.BUILDERS_PROGRAM}
-                </Button>
-              </Space>
-            </Text>
-          </Space>
-        }
-        banner
-        type="info"
-      />
       <Result
         title="Topos Faucet"
         subTitle={
