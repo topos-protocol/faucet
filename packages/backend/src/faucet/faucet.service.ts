@@ -3,9 +3,9 @@ import { ConfigService } from '@nestjs/config'
 import { SpanStatusCode, trace } from '@opentelemetry/api'
 import { ethers, providers, utils } from 'ethers'
 
+import { getErrorMessage } from '../utils'
 import { GetSubnetAssetsDto } from './faucet.dto'
 import { PROVIDER_ERRORS, WALLET_ERRORS } from './faucet.errors'
-import { getErrorMessage } from 'src/utils'
 
 @Injectable()
 export class FaucetService {
