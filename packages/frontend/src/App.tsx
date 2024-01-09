@@ -1,6 +1,8 @@
 import { ThemeProvider } from '@emotion/react'
 import styled from '@emotion/styled'
+import { ToposCore__factory } from '@topos-protocol/topos-smart-contracts/typechain-types/factories/contracts/topos-core/ToposCore__factory'
 import { Alert, Layout as AntdLayout } from 'antd'
+import { getDefaultProvider } from 'ethers'
 import { useEffect, useState } from 'react'
 
 import { ErrorsContext } from './contexts/errors'
@@ -13,9 +15,7 @@ import FaucetForm from './components/FaucetForm'
 import Content from './components/Content'
 import { SubnetWithId } from './types'
 import useRegisteredSubnets from './hooks/useRegisteredSubnets'
-import { BigNumber, ethers } from 'ethers'
 import { SubnetsContext } from './contexts/subnets'
-import { toposCoreContract } from './contracts'
 import { SuccessesContext } from './contexts/successes'
 
 const Errors = styled.div`
@@ -54,17 +54,18 @@ const App = () => {
           let toposSubnet: SubnetWithId | undefined
 
           if (toposSubnetEndpointHttp && toposSubnetEndpointWs) {
-            const provider = new ethers.providers.JsonRpcProvider(
-              toposSubnetEndpointHttp
-            )
+            const provider = getDefaultProvider(toposSubnetEndpointHttp)
             const network = await provider.getNetwork()
             const chainId = network.chainId
 
-            const contract = toposCoreContract.connect(provider)
-            const subnetId = await contract.networkSubnetId()
+            const toposCore = ToposCore__factory.connect(
+              import.meta.env.VITE_TOPOS_CORE_PROXY_CONTRACT_ADDRESS,
+              provider
+            )
+            const subnetId = await toposCore.networkSubnetId()
 
             toposSubnet = {
-              chainId: BigNumber.from(chainId.toString()),
+              chainId: BigInt(chainId.toString()),
               endpointHttp: toposSubnetEndpointHttp,
               endpointWs: toposSubnetEndpointWs,
               currencySymbol: 'TOPOS',
