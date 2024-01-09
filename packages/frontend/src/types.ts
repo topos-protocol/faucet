@@ -1,7 +1,5 @@
-import { BigNumber } from 'ethers'
-
 export interface Subnet {
-  chainId: BigNumber
+  chainId: BigInt
   currencySymbol: string
   endpointHttp: string
   endpointWs: string

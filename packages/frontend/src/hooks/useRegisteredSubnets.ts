@@ -1,9 +1,9 @@
-import { ethers } from 'ethers'
+import { getDefaultProvider } from 'ethers'
 import { useCallback, useContext, useEffect, useMemo, useState } from 'react'
+import { SubnetRegistrator__factory } from '@topos-protocol/topos-smart-contracts/typechain-types'
 
-import { subnetRegistratorContract } from '../contracts'
-import { Subnet, SubnetWithId } from '../types'
 import { ErrorsContext } from '../contexts/errors'
+import { SubnetWithId } from '../types'
 
 export default function useRegisteredSubnets() {
   const { setErrors } = useContext(ErrorsContext)
@@ -11,21 +11,21 @@ export default function useRegisteredSubnets() {
   const [registeredSubnets, setRegisteredSubnets] = useState<SubnetWithId[]>()
 
   const provider = useMemo(
-    () =>
-      new ethers.providers.WebSocketProvider(
-        import.meta.env.VITE_TOPOS_SUBNET_ENDPOINT_WS
-      ),
+    () => getDefaultProvider(import.meta.env.VITE_TOPOS_SUBNET_ENDPOINT_WS),
     []
   )
-
-  const contract = subnetRegistratorContract.connect(provider)
 
   const getRegisteredSubnets = useCallback(async () => {
     setLoading(true)
 
-    const registeredSubnetsCount = await contract
+    const subnetRegistrator = SubnetRegistrator__factory.connect(
+      import.meta.env.VITE_SUBNET_REGISTRATOR_CONTRACT_ADDRESS,
+      provider
+    )
+
+    const registeredSubnetsCount = await subnetRegistrator
       .getSubnetCount()
-      .then((count: ethers.BigNumber) => count.toNumber())
+      .then((count) => Number(count))
       .catch((error: any) => {
         console.error(error)
         setErrors((e) => [
@@ -38,7 +38,7 @@ export default function useRegisteredSubnets() {
       const promises = []
       let i = 0
       while (i < registeredSubnetsCount) {
-        const subnetId = await contract
+        const subnetId = await subnetRegistrator
           .getSubnetIdAtIndex(i)
           .catch((error: any) => {
             console.error(error)
@@ -50,10 +50,10 @@ export default function useRegisteredSubnets() {
 
         if (subnetId !== undefined) {
           promises.push(
-            contract
+            subnetRegistrator
               .subnets(subnetId)
-              .then((subnet: Subnet) => ({
-                ...subnet,
+              .then((subnet) => ({
+                ...(subnet as any).toObject(), // toObject method of ES6 Proxy
                 id: subnetId,
               }))
               .catch((error: Error) => {
