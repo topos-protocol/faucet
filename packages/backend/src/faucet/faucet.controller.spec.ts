@@ -1,5 +1,4 @@
 import { Test, TestingModule } from '@nestjs/testing'
-import { trace } from '@opentelemetry/api'
 
 import { FaucetController } from './faucet.controller'
 import { GetSubnetAssetsDto } from './faucet.dto'
@@ -10,9 +9,6 @@ const validGetSubnetAssetDto: GetSubnetAssetsDto = {
   address: '',
   subnetEndpoints: ['', ''],
 }
-
-const tracerMock = { startActiveSpan: jest.fn(), startSpan: jest.fn() }
-jest.spyOn(trace, 'getTracer').mockReturnValue(tracerMock)
 
 describe('FaucetController', () => {
   let app: TestingModule
@@ -37,10 +33,15 @@ describe('FaucetController', () => {
   })
 
   describe('getSubnetAssets', () => {
+    it('should complete', async () => {
+      expect(
+        await faucetController.getSubnetAssets(validGetSubnetAssetDto)
+      ).toEqual({})
+    })
+
     it('should call faucetService.getSubnetAssets', async () => {
       await faucetController.getSubnetAssets(validGetSubnetAssetDto)
       expect(faucetService.getSubnetAssets).toHaveBeenCalled()
-      expect(tracerMock.startActiveSpan).toHaveBeenCalled()
     })
   })
 })

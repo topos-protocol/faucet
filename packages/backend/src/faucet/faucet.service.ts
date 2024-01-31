@@ -1,9 +1,16 @@
 import { Injectable } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { SpanStatusCode, trace } from '@opentelemetry/api'
-import { ethers, providers, utils } from 'ethers'
+import {
+  Provider,
+  getDefaultProvider,
+  parseUnits,
+  TransactionReceipt,
+  Wallet,
+} from 'ethers'
 
 import { getErrorMessage } from '../utils'
+import { TRANSACTION_AMOUNT } from './faucet.constants'
 import { GetSubnetAssetsDto } from './faucet.dto'
 import { PROVIDER_ERRORS, WALLET_ERRORS } from './faucet.errors'
 
@@ -18,34 +25,27 @@ export class FaucetService {
         address,
         subnetEndpoints,
       })
-      const promises: Array<
-        Promise<Partial<ethers.providers.TransactionReceipt>>
-      > = []
+      const promises: Array<Promise<Partial<TransactionReceipt>>> = []
 
       for (const endpoint of subnetEndpoints) {
         promises.push(
-          new Promise<Partial<ethers.providers.TransactionReceipt>>(
-            async (resolve, reject) => {
-              try {
-                const { logsBloom, ...receipt } = await this._sendTransaction(
-                  address,
-                  endpoint
-                )
-                span.setAttribute(
-                  `receipt-${endpoint.replace('.', '-')}`,
-                  JSON.stringify(receipt)
-                )
-                resolve(receipt)
-              } catch (error) {
-                const message = getErrorMessage(error)
-                span.setAttribute(
-                  `error-${endpoint.replace('.', '-')}`,
-                  message
-                )
-                reject(error)
-              }
+          new Promise<Partial<TransactionReceipt>>(async (resolve, reject) => {
+            try {
+              const { logsBloom, ...receipt } = await this._sendTransaction(
+                address,
+                endpoint
+              )
+              span.setAttribute(
+                `receipt-${endpoint.replace('.', '-')}`,
+                JSON.stringify(receipt)
+              )
+              resolve(receipt)
+            } catch (error) {
+              const message = getErrorMessage(error)
+              span.setAttribute(`error-${endpoint.replace('.', '-')}`, message)
+              reject(error)
             }
-          )
+          })
         )
       }
 
@@ -65,58 +65,46 @@ export class FaucetService {
   }
 
   private async _sendTransaction(address: string, subnetEndpoint: string) {
-    return new Promise<providers.TransactionReceipt>(
-      async (resolve, reject) => {
-        try {
-          const provider = await this._createProvider(subnetEndpoint)
+    return new Promise<TransactionReceipt>(async (resolve, reject) => {
+      try {
+        const provider = await this._createProvider(subnetEndpoint)
 
-          const wallet = this._createWallet(provider)
+        const wallet = this._createWallet(provider)
 
-          const tx = await wallet.sendTransaction({
-            to: address,
-            value: utils.parseUnits('1.0'),
-          })
+        const tx = await wallet.sendTransaction({
+          to: address,
+          value: parseUnits(TRANSACTION_AMOUNT),
+        })
 
-          const receipt = await tx.wait()
-          resolve(receipt)
-        } catch (error) {
-          reject(error)
-        }
+        const receipt = await tx.wait()
+        resolve(receipt)
+      } catch (error) {
+        reject(error)
       }
-    )
+    })
   }
 
   private _createProvider(endpoint: string) {
-    return new Promise<providers.WebSocketProvider | providers.JsonRpcProvider>(
-      (resolve, reject) => {
-        const url = new URL(endpoint)
-        const provider = url.protocol.startsWith('ws')
-          ? new providers.WebSocketProvider(endpoint)
-          : new providers.JsonRpcProvider(endpoint)
+    return new Promise<Provider>((resolve, reject) => {
+      const provider = getDefaultProvider(endpoint)
 
-        // Fix: Timeout to leave time to errors to be asynchronously caught
-        const timeoutId = setTimeout(() => {
-          resolve(provider)
-        }, 1000)
+      // Fix: Timeout to leave time to errors to be asynchronously caught
+      const timeoutId = setTimeout(() => {
+        resolve(provider)
+      }, 1000)
 
-        provider.on('debug', (data) => {
-          if (data.error) {
-            clearTimeout(timeoutId)
-            reject(new Error(PROVIDER_ERRORS.INVALID_ENDPOINT))
-          }
-        })
-      }
-    )
+      provider.on('debug', (data) => {
+        if (data.error) {
+          clearTimeout(timeoutId)
+          reject(new Error(PROVIDER_ERRORS.INVALID_ENDPOINT))
+        }
+      })
+    })
   }
 
-  private _createWallet(
-    provider: providers.WebSocketProvider | providers.JsonRpcProvider
-  ) {
+  private _createWallet(provider: Provider) {
     try {
-      return new ethers.Wallet(
-        this.configService.get('PRIVATE_KEY') || '',
-        provider
-      )
+      return new Wallet(this.configService.get('PRIVATE_KEY') || '', provider)
     } catch (error) {
       throw new Error(WALLET_ERRORS.INVALID_PRIVATE_KEY)
     }
