@@ -64,7 +64,7 @@ If you have any questions, do not hesitate to reach us on [Discord](https://disc
 ## Resources
 
 - Website: https://toposware.com
-- Technical Documentation: https://docs.toposware.com
+- Technical Documentation: https://docs.topos.technology
 - Medium: https://toposware.medium.com
 - Whitepaper: [Topos: A Secure, Trustless, and Decentralized
   Interoperability Protocol](https://arxiv.org/pdf/2206.03481.pdf)
