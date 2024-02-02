@@ -10,6 +10,10 @@
   <br />
 </div>
 
+![docker-build](https://github.com/topos-protocol/faucet/actions/workflows/docker_build_push.yml/badge.svg)
+![test](https://github.com/topos-protocol/faucet/actions/workflows/test.yml/badge.svg)
+![release](https://img.shields.io/github/v/release/topos-protocol/faucet)
+[![codecov](https://codecov.io/gh/topos-protocol/faucet/graph/badge.svg?token=vuXprzLMnZ)](https://codecov.io/gh/topos-protocol/faucet)
 [![](https://dcbadge.vercel.app/api/server/7HZ8F8ykBT?style=flat)](https://discord.gg/7HZ8F8ykBT)
 
 ## Getting Started
@@ -60,7 +64,7 @@ If you have any questions, do not hesitate to reach us on [Discord](https://disc
 ## Resources
 
 - Website: https://toposware.com
-- Technical Documentation: https://docs.toposware.com
+- Technical Documentation: https://docs.topos.technology
 - Medium: https://toposware.medium.com
 - Whitepaper: [Topos: A Secure, Trustless, and Decentralized
   Interoperability Protocol](https://arxiv.org/pdf/2206.03481.pdf)

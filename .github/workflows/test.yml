@@ -1,0 +1,48 @@
+name: Tests
+on:
+  pull_request:
+    branches:
+      - main
+jobs:
+  unit-frontend:
+    name: Test/Unit/Frontend
+    runs-on: ubuntu-latest-16-core
+    environment: devnet-1
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install npm packages
+        run: npm ci
+
+      - name: Run Frontend unit tests
+        run: npm run frontend:test
+        env:
+          VITE_RECAPTCHA_SITE_KEY: ${{ vars.RECAPTCHA_SITE_KEY }}
+          VITE_SUBNET_REGISTRATOR_CONTRACT_ADDRESS: ${{ vars.SUBNET_REGISTRATOR_CONTRACT_ADDRESS }}
+          VITE_TOPOS_CORE_PROXY_CONTRACT_ADDRESS: ${{ vars.TOPOS_CORE_PROXY_CONTRACT_ADDRESS }}
+
+  unit-backend:
+    name: Test/Unit/Backend
+    runs-on: ubuntu-latest-16-core
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Set up NodeJS
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install npm packages
+        run: npm ci
+
+      - name: Run Backend unit tests
+        run: npm run backend:test

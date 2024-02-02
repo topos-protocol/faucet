@@ -11,6 +11,7 @@ import { ErrorsContext } from '../contexts/errors'
 import useTracingCreateSpan from '../hooks/useTracingCreateSpan'
 import { TracingOptions } from '../types'
 import { getErrorMessage } from '../utils'
+import TestId from '../utils/testId'
 
 interface Values {
   address: string
@@ -46,6 +47,7 @@ const FaucetForm = () => {
 
   const onFinish = useCallback(
     ({ address, subnetIds }: Values) => {
+      console.log('finish')
       recaptchaRef?.current?.execute()
 
       const span = useTracingCreateSpan('FaucetForm', 'onFinish')
@@ -103,7 +105,7 @@ const FaucetForm = () => {
   return (
     <>
       {getRegisteredSubnetsLoading ? (
-        <Spin size="large" />
+        <Spin size="large" data-testid={TestId.FAUCET_FORM_SPIN} />
       ) : (
         <Form
           form={form}
@@ -112,10 +114,12 @@ const FaucetForm = () => {
           style={{ margin: '0 auto', maxWidth: 400 }}
           onFinish={onFinish}
           onFinishFailed={onFinishFailed}
+          data-testid={TestId.FAUCET_FORM_FORM}
         >
           <Form.Item
             label="Subnets"
             name="subnetIds"
+            data-testid={TestId.FAUCET_FORM_FIELD_SUBNETS}
             rules={[
               {
                 required: true,
@@ -133,6 +137,7 @@ const FaucetForm = () => {
           <Form.Item
             label="Address"
             name="address"
+            data-testid={TestId.FAUCET_FORM_FIELD_ADDRESS}
             rules={[{ required: true, message: 'Please input your address!' }]}
           >
             <Input
@@ -146,6 +151,7 @@ const FaucetForm = () => {
               ref={recaptchaRef}
               sitekey={import.meta.env.VITE_RECAPTCHA_SITE_KEY}
               size="invisible"
+              data-testid={TestId.FAUCET_FORM_RECAPTCHA}
             />
           )}
           <Form.Item>
@@ -154,6 +160,7 @@ const FaucetForm = () => {
               htmlType="submit"
               loading={loading}
               disabled={!isReCaptchaConfigured}
+              data-testid={TestId.FAUCET_FORM_ACTION_SUBMIT}
             >
               Submit
             </Button>

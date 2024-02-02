@@ -1,6 +1,7 @@
 import axios from 'axios'
 import { useCallback, useContext, useState } from 'react'
 
+import { SUCCESS } from '../constants/wordings'
 import { ErrorsContext } from '../contexts/errors'
 import { SuccessesContext } from '../contexts/successes'
 import { TracingOptions } from '../types'
@@ -35,14 +36,12 @@ export default function useGetSubnetAsset() {
           )
           .then(() => {
             setErrors([])
-            setSuccesses((s) => [
-              ...s,
-              `Coins were successfully sent to your address on the selected subnets 🎉`,
-            ])
+            setSuccesses((s) => [...s, SUCCESS.GET_SUBNET_ASSET])
             resolve()
           })
           .catch((error) => {
             let _error: string
+            console.log(error)
             switch (error?.response?.status) {
               case 429: // Too many requests
                 _error = `You cannot use the faucet again before ${error?.response?.headers['retry-after']}s`
