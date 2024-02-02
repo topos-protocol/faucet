@@ -13,6 +13,7 @@
 ![docker-build](https://github.com/topos-protocol/faucet/actions/workflows/docker_build_push.yml/badge.svg)
 ![test](https://github.com/topos-protocol/faucet/actions/workflows/test.yml/badge.svg)
 ![release](https://img.shields.io/github/v/release/topos-protocol/faucet)
+[![codecov](https://codecov.io/gh/topos-protocol/faucet/graph/badge.svg?token=vuXprzLMnZ)](https://codecov.io/gh/topos-protocol/faucet)
 [![](https://dcbadge.vercel.app/api/server/7HZ8F8ykBT?style=flat)](https://discord.gg/7HZ8F8ykBT)
 
 ## Getting Started
