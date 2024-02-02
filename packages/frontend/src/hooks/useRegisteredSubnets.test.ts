@@ -1,5 +1,5 @@
-import { SubnetRegistrator__factory } from '@topos-protocol/topos-smart-contracts/typechain-types/factories/contracts/topos-core/SubnetRegistrator__factory'
 import { renderHook, waitFor } from '@testing-library/react'
+import * as typechainExports from '@topos-protocol/topos-smart-contracts/typechain-types'
 import { vi } from 'vitest'
 
 import useRegisteredSubnets from './useRegisteredSubnets'
@@ -21,6 +21,14 @@ const registeredSubnets: { [x: string]: Subnet } = {
     endpointWs: '',
     logoURL: '',
     name: 'subnetMock',
+  },
+  incal: {
+    chainId: BigInt(2),
+    currencySymbol: 'TST2',
+    endpointHttp: '',
+    endpointWs: '',
+    logoURL: '',
+    name: 'Incal',
   },
 }
 
@@ -53,8 +61,8 @@ const contractConnectMock = vi.fn().mockReturnValue({
   subnets: subnetsMock,
 })
 
-vi.spyOn(SubnetRegistrator__factory, 'connect').mockReturnValue(
-  contractConnectMock
+vi.spyOn(typechainExports, 'SubnetRegistrator__factory', 'get').mockReturnValue(
+  { connect: contractConnectMock } as any
 )
 
 vi.mock('./useEthers', () => ({
@@ -79,6 +87,8 @@ describe('useRegisteredSubnets', () => {
     expect(subnetsMock).toHaveBeenCalledWith('subnet1')
     expect(subnetsMock).toHaveBeenCalledWith('subnet2')
     expect(result.current.loading).toBe(false)
-    expect(result.current.registeredSubnets).toStrictEqual(expectedSubnets)
+    expect(result.current.registeredSubnets).toStrictEqual(
+      expectedSubnets.filter((s) => s.name === 'Incal')
+    )
   })
 })

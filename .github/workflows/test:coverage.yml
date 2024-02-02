@@ -1,11 +1,16 @@
-name: Run tests
+name: Run test coverage
+
 on:
+  push:
+    branches:
+      - main
   pull_request:
     branches:
       - main
+
 jobs:
-  unit-frontend:
-    name: Test/Unit/Frontend
+  coverage:
+    name: Test/Coverage
     runs-on: ubuntu-latest-16-core
     environment: devnet-1
     steps:
@@ -21,27 +26,16 @@ jobs:
       - name: Install npm packages
         run: npm ci
 
-      - name: Run Frontend unit tests
-        run: npm run frontend:test
+      - name: Run Frontend test coverage
+        run: npm run frontend:test:coverage
         env:
           VITE_SUBNET_REGISTRATOR_CONTRACT_ADDRESS: ${{ vars.SUBNET_REGISTRATOR_CONTRACT_ADDRESS }}
           VITE_TOPOS_CORE_PROXY_CONTRACT_ADDRESS: ${{ vars.TOPOS_CORE_PROXY_CONTRACT_ADDRESS }}
 
-  unit-backend:
-    name: Test/Unit/Backend
-    runs-on: ubuntu-latest-16-core
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v3
+      - name: Run Backend test coverage
+        run: npm run backend:test:coverage
 
-      - name: Set up NodeJS
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-          cache: 'npm'
-
-      - name: Install npm packages
-        run: npm ci
-
-      - name: Run Backend unit tests
-        run: npm run backend:test
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

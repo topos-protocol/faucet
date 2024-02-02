@@ -1,6 +1,6 @@
 import { createContext, Dispatch, SetStateAction } from 'react'
 
-interface ErrorsContext {
+export interface ErrorsContext {
   setErrors: Dispatch<SetStateAction<string[]>>
 }
 

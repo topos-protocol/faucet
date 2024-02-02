@@ -1,6 +1,6 @@
 import { createContext, Dispatch, SetStateAction } from 'react'
 
-interface SuccessesContext {
+export interface SuccessesContext {
   setSuccesses: Dispatch<SetStateAction<string[]>>
 }
 
