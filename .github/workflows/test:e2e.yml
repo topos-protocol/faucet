@@ -24,6 +24,7 @@ jobs:
       - name: Run Frontend unit tests
         run: npm run frontend:test
         env:
+          VITE_RECAPTCHA_SITE_KEY: ${{ vars.VITE_RECAPTCHA_SITE_KEY }}
           VITE_SUBNET_REGISTRATOR_CONTRACT_ADDRESS: ${{ vars.SUBNET_REGISTRATOR_CONTRACT_ADDRESS }}
           VITE_TOPOS_CORE_PROXY_CONTRACT_ADDRESS: ${{ vars.TOPOS_CORE_PROXY_CONTRACT_ADDRESS }}
 
