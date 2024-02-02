@@ -29,7 +29,7 @@ jobs:
       - name: Run Frontend test coverage
         run: npm run frontend:test:coverage
         env:
-          VITE_RECAPTCHA_SITE_KEY: ${{ vars.VITE_RECAPTCHA_SITE_KEY }}
+          VITE_RECAPTCHA_SITE_KEY: ${{ vars.RECAPTCHA_SITE_KEY }}
           VITE_SUBNET_REGISTRATOR_CONTRACT_ADDRESS: ${{ vars.SUBNET_REGISTRATOR_CONTRACT_ADDRESS }}
           VITE_TOPOS_CORE_PROXY_CONTRACT_ADDRESS: ${{ vars.TOPOS_CORE_PROXY_CONTRACT_ADDRESS }}
 
