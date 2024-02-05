@@ -4,5 +4,6 @@ export enum SUCCESS {
 
 export enum ERROR {
   INVALID_ADDRESS = 'This address is not a valid address!',
+  MISSING_ADDRESS = 'Please input your address!',
   MISSING_SUBNET = 'Please select at least one subnet!',
 }
