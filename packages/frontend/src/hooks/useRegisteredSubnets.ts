@@ -68,11 +68,12 @@ export default function useRegisteredSubnets() {
         i++
       }
 
-      const subnets = await Promise.allSettled(promises).then((values) =>
-        values
-          .filter((v) => v.status === 'fulfilled')
-          .map((v) => (v.status === 'fulfilled' ? v.value : undefined))
-          .filter((v) => v)
+      const subnets = await Promise.allSettled(promises).then(
+        (values) =>
+          values
+            .filter((v) => v.status === 'fulfilled')
+            .map((v) => (v.status === 'fulfilled' ? v.value : undefined))
+            .filter((v) => v && v.name === 'Incal') // TMP, to filter out external subnets
       )
       setRegisteredSubnets(subnets as SubnetWithId[])
     }
