@@ -138,7 +138,7 @@ const FaucetForm = () => {
             label="Address"
             name="address"
             data-testid={TestId.FAUCET_FORM_FIELD_ADDRESS}
-            rules={[{ required: true, message: 'Please input your address!' }]}
+            rules={[{ required: true, message: ERROR.MISSING_ADDRESS }]}
           >
             <Input
               placeholder="Input your address"

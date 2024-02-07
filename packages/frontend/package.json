@@ -11,7 +11,7 @@
     "start": "tsc && vite build --mode development --watch --sourcemap true",
     "test": "vitest",
     "test:coverage": "vitest run --coverage",
-    "test:e2e": "start-server-and-test 'npm run preview' http-get://localhost:4173 'cypress run'"
+    "test:e2e": "env-cmd --silent cypress run"
   },
   "dependencies": {
     "@ant-design/icons": "^5.0.1",

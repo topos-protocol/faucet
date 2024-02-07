@@ -7,9 +7,6 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-.env
-dist
 dist-ssr
 *.local
 
@@ -24,5 +21,10 @@ dist-ssr
 *.sln
 *.sw?
 
-# Test coverage
+**/node_modules
+**/.env
+**/dist
+**/cypress/screenshots
+**/cypress/videos
 **/coverage
+
